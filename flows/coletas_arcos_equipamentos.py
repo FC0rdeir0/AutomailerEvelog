@@ -7,6 +7,7 @@ from services.email_sender import enviar_emails
 from utils.text import remover_acentos
 from utils.email_form import render_email_config
 from services.txt_parser import parse_txt
+from io import BytesIO
 
 def run(uploaded, email_user, senha):
     df_emails, emails_unidades = carregar_emails_unidades("bases/emails_restaurantes.xlsx")
@@ -30,6 +31,24 @@ def run(uploaded, email_user, senha):
     )
     df["PRECO_UNIT_RS"] = pd.to_numeric(
         df["PRECO_UNIT_RS"], errors="coerce"
+    )
+
+    def to_excel(df):
+        output = BytesIO()
+
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Dados")
+
+        output.seek(0)
+        return output
+
+    excel_file = to_excel(df)
+
+    st.download_button(
+        label="Exportar planilha",
+        data=excel_file,
+        file_name="dados.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
     st.divider()
